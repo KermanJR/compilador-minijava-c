@@ -1,0 +1,13 @@
+// Arquivo de teste para o scanner
+
+// Identificadores e números inteiros
+x = 10;
+y = x + 20;
+
+// Operadores e pontuação
+if (x > 5) {
+    System.out.println("x eh maior que 5");
+} else {
+    System.out.println("x eh menor ou igual a 5");
+}
+
