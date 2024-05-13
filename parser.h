@@ -4,17 +4,26 @@ class Parser
 {
     private:
         Scanner* scanner;
-        Token* lToken;
+        Token* ltoken;
 
         void advance();
         void match(int);
 
-        void goal();
-        void expr();
-        void exprLinha();
-        void term();
-        void termLinha();
-        void factor();
+        void Program();
+        void MainClass();
+        void ClassDeclaration();
+        void VarDeclaration();
+        void MethodDeclaration();
+        void Params();
+        void Type();
+        void Statement();
+        void Expression();
+        void RelExpression();
+        void AddExpression();
+        void MultExpression();
+        void UnExpression();
+        void PrimExpression();
+        void ExpressionsList();
 
         void error(string);
 
