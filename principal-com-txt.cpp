@@ -1,7 +1,7 @@
-#include "scanner.h"
+#include "parser.h"
 #include <iostream>
 #include <fstream>
-
+#include <sstream>
 string* vet;
 
 void print(Token*);
@@ -9,13 +9,7 @@ void allocVetor();
 void freeVetor();
 
 int main(int argc, char* argv[]) {
-    string input;
-
-     // Verifica se foi fornecido o nome do arquivo de teste como argumento
-    if (argc < 2) {
-        cout << "Uso: " << argv[0] << " <arquivo_de_teste>\n";
-        return 1; // Saída de erro
-    }
+    string input, content;
 
     // Abre o arquivo de teste em modo de leitura
     ifstream file(argv[1]);
@@ -26,52 +20,19 @@ int main(int argc, char* argv[]) {
         return 1; // Saída de erro
     }
 
-    // Lê uma linha de entrada
-    //getline(cin, input);
+    // Lê todo o conteúdo do arquivo
+    stringstream buffer;
+    buffer << file.rdbuf();
+    content = buffer.str();
+    cout << content;
 
-    // Cria um objeto Scanner com a entrada fornecida
-    /*Scanner* scanner = new Scanner(input);
+    // Cria um objeto Parser com o conteúdo do arquivo
+    Parser parser(content);
 
-    // Aloca o vetor de strings para mapear os tokens
-    allocVetor();
+    // Executa a análise sintática
+    parser.run();
 
-    Token* t;
-
-    do {
-        // Obtém o próximo token do scanner
-        t = scanner->nextToken();
-
-        // Imprime o token
-        print(t);
-    } while (t->name != END_OF_FILE);*/
-
-    // Libera a memória alocada para o scanner
-    //delete scanner;
-
-     while (getline(file, input)) {
-        // Cria um objeto Scanner com a entrada fornecida
-        Scanner scanner(input);
-
-        allocVetor();
-
-        Token* t;
-
-        // Analisa os tokens até o final do arquivo
-        do {
-            t = scanner.nextToken();
-            //cout << t->name << " ";
-            print(t);
-        } while (t->name != END_OF_FILE);
-
-        // Libera a memória alocada para o vetor de strings
-        freeVetor();
-        //delete scanner;
-    }
-
-    // Libera a memória alocada para o vetor de strings
-    //freeVetor();
     file.close();
-
 
     return 0;
 }
@@ -85,8 +46,8 @@ void allocVetor() {
     vet[INTEGER_LITERAL] = "INTEGER_LITERAL";
     vet[PLUS] = "PLUS";
     vet[MINUS] = "MINUS";
-    vet[TIMES] = "TIMES";
-    vet[DIVIDE] = "DIVIDE";
+    vet[MULT] = "MULT";
+    vet[DIV] = "DIV";
     vet[ASSIGN] = "ASSIGN";
     vet[EQ] = "EQ";
     vet[NOT] = "NOT";
@@ -112,7 +73,6 @@ void allocVetor() {
     vet[EXTENDS] = "EXTENDS"; // PR
     vet[FALSE] = "FALSE"; // PR
     vet[IF] = "IF"; // PR
-    vet[INT] = "INT"; // PR
     vet[LENGTH] = "LENGTH"; // PR
     vet[MAIN] = "MAIN"; // PR
     vet[NEW] = "NEW"; // PR
@@ -125,8 +85,11 @@ void allocVetor() {
     vet[TRUE] = "TRUE"; // PR
     vet[VOID] = "VOID"; // PR
     vet[WHILE] = "WHILE"; // PR
+    vet[INT] = "INT";
     vet[END_OF_FILE] = "END_OF_FILE";
 }
+
+// Libera a memória
 
 // Libera a memória alocada para o vetor de strings
 void freeVetor() {
