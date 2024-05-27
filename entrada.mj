@@ -1,9 +1,14 @@
 class Main {
     public static void main(String[] args) {
-        int x;
-        int y;
-        x = 10;
-        y = x + 20;
-        System.out.println(y);
-    
+        int a;
+        int b;
+        int temp;
+        a = 5;
+        b = 10;
+        temp = a;
+        a = b;
+        b = temp;
+        System.out.println(a); // Saída: a: 10
+        System.out.println(b); // Saída: b: 5
+    }
 }
