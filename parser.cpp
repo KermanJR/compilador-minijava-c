@@ -5,31 +5,35 @@ Parser::Parser(string input) {
     advance();
 }
 
-void Parser::run() {
-    Program();
-    if (ltoken->name != END_OF_FILE) {
-        error("Token inesperado após o término do programa");
-    }
-}
-
 void Parser::advance() {
-    ltoken = scanner->nextToken();
+    currentToken = scanner->nextToken();
 }
 
-void Parser::match(int tokenType) {
-    if (ltoken->name == tokenType) {
+void Parser::match(int expected) {
+    if (currentToken->name == expected) {
         advance();
     } else {
-        error("Token inesperado");
+        syntaxError("expected " + std::to_string(expected) + " but found " + currentToken->lexeme);
     }
 }
 
+void Parser::syntaxError(std::string message) {
+    std::cerr << "Syntax error: " << message << std::endl;
+    exit(EXIT_FAILURE);
+}
+
+
+void Parser::run() {
+    Program();
+    std::cout << "Compilation successful." << std::endl;
+}
 
 void Parser::Program() {
     MainClass();
-    while (ltoken->name == CLASS) {
+    while (currentToken->name == CLASS) {
         ClassDeclaration();
     }
+    match(END_OF_FILE);
 }
 
 void Parser::MainClass() {
@@ -47,22 +51,25 @@ void Parser::MainClass() {
     match(ID);
     match(R_PAREN);
     match(L_BRACE);
-    Statement();
+    while (currentToken->name != R_BRACE) {
+        Statement();
+    }
+    match(R_BRACE);
     match(R_BRACE);
 }
 
 void Parser::ClassDeclaration() {
     match(CLASS);
     match(ID);
-    if (ltoken->name == EXTENDS) {
-        advance();
+    if (currentToken->name == EXTENDS) {
+        match(EXTENDS);
         match(ID);
     }
     match(L_BRACE);
-    while (ltoken->name == INTEGER_LITERAL || ltoken->name == BOOLEAN || ltoken->name == ID) {
+    while (currentToken->name == INT || currentToken->name == BOOLEAN || currentToken->name == ID) {
         VarDeclaration();
     }
-    while (ltoken->name == PUBLIC) {
+    while (currentToken->name == PUBLIC) {
         MethodDeclaration();
     }
     match(R_BRACE);
@@ -74,20 +81,38 @@ void Parser::VarDeclaration() {
     match(SEMICOLON);
 }
 
+void Parser::Type() {
+    if (currentToken->name == INT) {
+        match(INT);
+        if (currentToken->name == L_BRACKET) {
+            match(L_BRACKET);
+            match(R_BRACKET);
+        }
+    } else if (currentToken->name == BOOLEAN) {
+        match(BOOLEAN);
+    } else if (currentToken->name == ID) {
+        match(ID);
+    } else {
+        std::cerr << "Syntax error: expected type but found " << currentToken->name << std::endl;
+        exit(EXIT_FAILURE);
+    }
+}
+
+
 void Parser::MethodDeclaration() {
     match(PUBLIC);
     Type();
     match(ID);
     match(L_PAREN);
-    if (ltoken->name == INTEGER_LITERAL || ltoken->name == BOOLEAN || ltoken->name == ID) {
+    if (currentToken->name == INT || currentToken->name == BOOLEAN || currentToken->name == ID) {
         Params();
     }
     match(R_PAREN);
     match(L_BRACE);
-    while (ltoken->name == INTEGER_LITERAL || ltoken->name == BOOLEAN || ltoken->name == ID) {
+    while (currentToken->name == INT || currentToken->name == BOOLEAN || currentToken->name == ID) {
         VarDeclaration();
     }
-    while (ltoken->name == L_BRACE || ltoken->name == IF || ltoken->name == WHILE || ltoken->name == SYSTEM_OUT_PRINTLN || ltoken->name == ID) {
+    while (currentToken->name == L_BRACE || currentToken->name == IF || currentToken->name == WHILE || currentToken->name == SYSTEM_OUT_PRINT_LN || currentToken->name == ID) {
         Statement();
     }
     match(RETURN);
@@ -99,170 +124,187 @@ void Parser::MethodDeclaration() {
 void Parser::Params() {
     Type();
     match(ID);
-    while (ltoken->name == COMMA) {
-        advance();
+    while (currentToken->name == COMMA) {
+        match(COMMA);
         Type();
         match(ID);
     }
 }
 
-void Parser::Type() {
-    if (ltoken->name == INTEGER_LITERAL) {
-        advance();
-        if (ltoken->name == L_BRACKET) {
-            advance();
-            match(R_BRACKET);
-        }
-    } else if (ltoken->name == BOOLEAN) {
-        advance();
-    } else if (ltoken->name == ID) {
-        advance();
-    } else {
-        error("Tipo invalido");
-    }
-}
 
 void Parser::Statement() {
-    if (ltoken->name == L_BRACE) {
-        advance();
-        while (ltoken->name == L_BRACE || ltoken->name == IF || ltoken->name == WHILE || ltoken->name == SYSTEM_OUT_PRINTLN || ltoken->name == ID) {
+    if (currentToken->name == L_BRACE) {
+        match(L_BRACE);
+        while (currentToken->name != R_BRACE) {
             Statement();
         }
         match(R_BRACE);
-    } else if (ltoken->name == IF) {
-        advance();
+    } else if (currentToken->name == IF) {
+        match(IF);
         match(L_PAREN);
         Expression();
         match(R_PAREN);
         Statement();
         match(ELSE);
         Statement();
-    } else if (ltoken->name == WHILE) {
-        advance();
+    } else if (currentToken->name == WHILE) {
+        match(WHILE);
         match(L_PAREN);
         Expression();
         match(R_PAREN);
         Statement();
-    } else if (ltoken->name == SYSTEM_OUT_PRINTLN) {
-        advance();
+    } else if (currentToken->name == SYSTEM_OUT_PRINT_LN) {
+        match(SYSTEM_OUT_PRINT_LN);
         match(L_PAREN);
-        Expression();
+		Expression();
         match(R_PAREN);
         match(SEMICOLON);
-    } else if (ltoken->name == ID) {
-        advance();
-        if (ltoken->name == ASSIGN) {
-            advance();
+    }else if (currentToken->name == ID) {
+        string idName = currentToken->lexeme;
+        match(ID);
+        if (currentToken->name == ASSIGN) {
+            match(ASSIGN);
             Expression();
             match(SEMICOLON);
-        } else if (ltoken->name == L_BRACKET) {
-            advance();
+        } else if (currentToken->name == L_BRACKET) {
+            match(L_BRACKET);
             Expression();
             match(R_BRACKET);
             match(ASSIGN);
             Expression();
             match(SEMICOLON);
         } else {
-            error("Declaracao invalida");
+            std::cerr << "Syntax error: expected '=' or '[' but found " << currentToken->name << std::endl;
+            exit(EXIT_FAILURE);
         }
+    } else if (currentToken->name == INT || currentToken->name == BOOLEAN) {
+        Type();
+        match(ID);
+        match(SEMICOLON);
     } else {
-        error("Declaracao invalida");
+        std::cerr << "Syntax error: expected statement but found " << currentToken->name << std::endl;
+        exit(EXIT_FAILURE);
     }
 }
 
 void Parser::Expression() {
     RelExpression();
-    while (ltoken->name == AND) {
-        advance();
+    while (currentToken->name == AND) {
+        match(AND);
         RelExpression();
     }
 }
 
 void Parser::RelExpression() {
     AddExpression();
-    while (ltoken->name == LESS || ltoken->name == LE || ltoken->name == GT || ltoken->name == GE || ltoken->name == EQ || ltoken->name == NE) {
-        advance();
+    while (currentToken->name == LESS || currentToken->name == GT || currentToken->name == EQ || currentToken->name == NE) {
+        if (currentToken->name == LESS) {
+            match(LESS);
+        } else if (currentToken->name == GT) {
+            match(GT);
+        } else if (currentToken->name == EQ) {
+            match(EQ);
+        } else if (currentToken->name == NE) {
+            match(NE);
+        }
         AddExpression();
     }
 }
 
 void Parser::AddExpression() {
     MultExpression();
-    while (ltoken->name == PLUS || ltoken->name == MINUS) {
-        advance();
+    while (currentToken->name == PLUS || currentToken->name == MINUS) {
+        if (currentToken->name == PLUS) {
+            match(PLUS);
+        } else if (currentToken->name == MINUS) {
+            match(MINUS);
+        }
         MultExpression();
     }
 }
 
 void Parser::MultExpression() {
     UnExpression();
-    while (ltoken->name == MULT || ltoken->name == DIV) {
-        advance();
+    while (currentToken->name == MULT || currentToken->name == DIV) {
+        if (currentToken->name == MULT) {
+            match(MULT);
+        } else if (currentToken->name == DIV) {
+            match(DIV);
+        }
         UnExpression();
     }
 }
 
 void Parser::UnExpression() {
-    if (ltoken->name == NOT || ltoken->name == MINUS) {
-        advance();
+    if (currentToken->name == NOT) {
+        match(NOT);
         UnExpression();
-    } else {
+    } else if (currentToken->name == MINUS) {
+        match(MINUS);
+        UnExpression();
+    } else if (currentToken->name == INTEGER_LITERAL || currentToken->name == TRUE || currentToken->name == FALSE || currentToken->name == NEW || currentToken->name == ID || currentToken->name == THIS || currentToken->name == L_PAREN) {
         PrimExpression();
+    } else {
+        std::cerr << "Syntax error: expected unary expression but found " << currentToken->name << std::endl;
+        exit(EXIT_FAILURE);
     }
 }
 
 void Parser::PrimExpression() {
-    if (ltoken->name == INTEGER_LITERAL || ltoken->name == TRUE || ltoken->name == FALSE || ltoken->name == ID || ltoken->name == THIS) {
-        advance();
-    } else if (ltoken->name == L_PAREN) {
-        advance();
-        Expression();
-        match(R_PAREN);
-    } else if (ltoken->name == NEW) {
-        advance();
-        if (ltoken->name == INTEGER_LITERAL) {
-            advance();
+    if (currentToken->name == ID) {
+        match(ID);
+        if (currentToken->name == DOT) {
+            match(DOT);
+            if (currentToken->name == LENGTH) {
+                match(LENGTH);
+            } else {
+                match(ID);
+                if (currentToken->name == L_PAREN) {
+                    match(L_PAREN);
+                    if (currentToken->name == INTEGER_LITERAL || currentToken->name == TRUE || currentToken->name == FALSE || currentToken->name == NEW || currentToken->name == ID || currentToken->name == THIS || currentToken->name == L_PAREN) {
+                        ExpressionsList();
+                    }
+                    match(R_PAREN);
+                }
+            }
+        } else if (currentToken->name == L_BRACKET) {
             match(L_BRACKET);
             Expression();
             match(R_BRACKET);
-        } else if (ltoken->name == ID) {
-            advance();
+        }
+    } else if (currentToken->name == THIS) {
+        match(THIS);
+    } else if (currentToken->name == NEW) {
+        match(NEW);
+        if (currentToken->name == INT) {
+            match(INT);
+            match(L_BRACKET);
+            Expression();
+            match(R_BRACKET);
+        } else if (currentToken->name == ID) {
+            match(ID);
             match(L_PAREN);
             match(R_PAREN);
         } else {
-            error("Expressao primaria invalida");
+            std::cerr << "Syntax error: expected type after 'new' but found " << currentToken->name << std::endl;
+            exit(EXIT_FAILURE);
         }
+    } else if (currentToken->name == INTEGER_LITERAL || currentToken->name == TRUE || currentToken->name == FALSE) {
+        match(currentToken->name);
+    } else if (currentToken->name == L_PAREN) {
+        match(L_PAREN);
+        Expression();
+        match(R_PAREN);
     } else {
-        error("Expressao primaria invalida");
-    }
-    while (ltoken->name == DOT || ltoken->name == L_BRACKET) {
-        if (ltoken->name == DOT) {
-            advance();
-            match(ID);
-            if (ltoken->name == L_PAREN) {
-                advance();
-                if (ltoken->name != R_PAREN) {
-                    ExpressionsList();
-                }
-                match(R_PAREN);
-            }
-        } else if (ltoken->name == L_BRACKET) {
-            advance();
-            Expression();
-            match(R_BRACKET);
-        }
+        std::cerr << "Syntax error: expected primary expression but found " << currentToken->name << std::endl;
+        exit(EXIT_FAILURE);
     }
 }
 
 void Parser::ExpressionsList() {
     Expression();
-    while (ltoken->name == COMMA) {
-        advance();
+    while (currentToken->name == COMMA) {
+        match(COMMA);
         Expression();
     }
-}
-
-void Parser::error(string str) {
-    cout << "Parsing error: " << str << " at token " << ltoken->lexeme << endl;
-    exit(EXIT_FAILURE);
 }

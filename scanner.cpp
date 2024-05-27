@@ -1,5 +1,29 @@
-
 #include "scanner.h"
+#include <set>
+
+// Palavras reservadas
+set<string> reservedWords = {
+    "if",
+    "else",
+    "while",
+    "class",
+    "main",
+    "void",
+    "static",
+    "extends",
+    "false",
+    "true",
+    "int",
+    "boolean",
+    "return",
+    "new",
+    "String",
+    "public",
+    "this",
+    "System.out.println",
+    "args"
+};
+
 
 // Construtor
 Scanner::Scanner(string input) {
@@ -42,60 +66,74 @@ Token* Scanner::nextToken() {
         }
 
 
-        //Verifica se é ID ou Palavra reservada
         if (isalpha(currentChar) || currentChar == '_') {
             string identifier = "";
             identifier += currentChar;
             pos++;
-            while (pos < input.length() && isalnum(input[pos])) {
+            while (pos < input.length() && (isalnum(input[pos]) || input[pos] == '_')) {
                 identifier += input[pos];
                 pos++;
             }
-
-            // Verifica se é uma palavra reservada
-            cout << identifier << endl;
-            if (identifier == "boolean") {
-                tok = new Token(BOOLEAN, UNDEF);
-            } else if (identifier == "class") {
-                tok = new Token(CLASS, UNDEF);
-            } else if (identifier == "else") {
-                tok = new Token(ELSE, UNDEF);
-            } else if (identifier == "extends") {
-                tok = new Token(EXTENDS, UNDEF);
-            } else if (identifier == "false") {
-                tok = new Token(FALSE, UNDEF);
-            } else if (identifier == "if") {
-                tok = new Token(IF, UNDEF);
-            } else if (identifier == "int") {
-                tok = new Token(INT, UNDEF);
-            } else if (identifier == "length") {
-                tok = new Token(LENGTH, UNDEF);
-            } else if (identifier == "main") {
-                tok = new Token(MAIN, UNDEF);
-            } else if (identifier == "new") {
-                tok = new Token(NEW, UNDEF);
-            } else if (identifier == "public") {
-                tok = new Token(PUBLIC, UNDEF);
-            } else if (identifier == "return") {
-                tok = new Token(RETURN, UNDEF);
-            } else if (identifier == "static") {
-                tok = new Token(STATIC, UNDEF);
-            } else if (identifier == "String") {
-                tok = new Token(STRING, UNDEF);
-            } else if (identifier == "true") {
-                tok = new Token(TRUE, UNDEF);
-            } else if (identifier == "void") {
-                tok = new Token(VOID, UNDEF);
-            } else if (identifier == "while") {
-                tok = new Token(WHILE, UNDEF);
-            } else {
-                // Se não for uma palavra reservada, trata como um ID genérico
-                tok = new Token(ID, UNDEF);
+]
+			// Trata o System.out.println como uma única palavra reservada
+            if (identifier == "System") {
+                pos += 12;
+                lexeme = "System.out.println";
+				cout << lexeme << endl;
+                tok = new Token(SYSTEM_OUT_PRINT_LN, UNDEF, identifier);
+                return tok;
             }
+
+            // Verifica se o identificador é uma palavra reservada
+            if (reservedWords.count(identifier) > 0) {
+                cout << identifier << endl;
+                // Retorna o token correspondente à palavra reservada
+                if (identifier == "if")
+                    tok = new Token(IF, UNDEF, identifier);
+                else if (identifier == "else")
+                    tok = new Token(ELSE, UNDEF, identifier);
+                else if (identifier == "while")
+                    tok = new Token(WHILE, UNDEF, identifier);
+                else if (identifier == "class")
+                    tok = new Token(CLASS, UNDEF, identifier);
+                else if (identifier == "main")
+                    tok = new Token(MAIN, UNDEF, identifier);
+                else if (identifier == "void")
+                    tok = new Token(VOID, UNDEF, identifier);
+                else if (identifier == "static")
+                    tok = new Token(STATIC, UNDEF, identifier);
+                else if (identifier == "extends")
+                    tok = new Token(EXTENDS, UNDEF, identifier);
+                else if (identifier == "false")
+                    tok = new Token(FALSE, UNDEF, identifier);
+                else if (identifier == "true")
+                    tok = new Token(TRUE, UNDEF, identifier);
+                else if (identifier == "int")
+                    tok = new Token(INT, UNDEF, identifier);
+                else if (identifier == "boolean")
+                    tok = new Token(BOOLEAN, UNDEF, identifier);
+                else if (identifier == "return")
+                    tok = new Token(RETURN, UNDEF, identifier);
+                else if (identifier == "new")
+                    tok = new Token(NEW, UNDEF, identifier);
+                else if (identifier == "String")
+                    tok = new Token(STRING, UNDEF, identifier);
+                else if (identifier == "true")
+                    tok = new Token(TRUE, UNDEF, identifier);
+                else if (identifier == "public")
+                    tok = new Token(PUBLIC, UNDEF, identifier);
+                else if (identifier == "this")
+                    tok = new Token(THIS, UNDEF, identifier);
+                else if (identifier == "args")
+                    tok = new Token(ID, UNDEF, identifier);
+            } else {
+                // Retorna o token ID para identificadores não reservados
+                tok = new Token(ID, UNDEF, identifier);
+            }
+
+            lexeme = identifier;
             return tok;
-
         }
-
 
 
         // Verifica se é um número inteiro
@@ -118,71 +156,85 @@ Token* Scanner::nextToken() {
             case '(':
                 pos++;
                 lexeme = "(";
+                              cout << lexeme << endl;
                 tok = new Token(L_PAREN, UNDEF, lexeme);
                 return tok;
             case ')':
                 pos++;
                 lexeme = ")";
+                              cout << lexeme << endl;
                 tok = new Token(R_PAREN, UNDEF, lexeme);
                 return tok;
             case '[':
                 pos++;
                 lexeme = "[";
+                              cout << lexeme << endl;
                 tok = new Token(L_BRACKET, UNDEF, lexeme);
                 return tok;
             case ']':
                 pos++;
                 lexeme = "]";
+                              cout << lexeme << endl;
                 tok = new Token(R_BRACKET, UNDEF, lexeme);
                 return tok;
             case '{':
                 pos++;
                 lexeme = "{";
+                 cout << lexeme << endl;
                 tok = new Token(L_BRACE, UNDEF, lexeme);
                 return tok;
             case '}':
                 pos++;
                 lexeme = "}";
+                cout << lexeme << endl;
                 tok = new Token(R_BRACE, UNDEF, lexeme);
                 return tok;
             case ';':
                 pos++;
                 lexeme = ";";
+                cout << lexeme << endl;
                 tok = new Token(SEMICOLON, UNDEF, lexeme);
                 return tok;
             case '.':
                 pos++;
                 lexeme = ".";
+                cout << lexeme << endl;
                 tok = new Token(DOT, UNDEF, lexeme);
                 return tok;
             case '"':
                 pos++;
-                lexeme = "\"";
+                lexeme = '"';
+                cout << lexeme << endl;
                 tok = new Token(QUOTE, UNDEF, lexeme);
                 return tok;
             case ',':
                 pos++;
                 lexeme = ",";
+                cout << lexeme << endl;
                 tok = new Token(COMMA, UNDEF, lexeme);
                 return tok;
             case '+':
                 pos++;
                 lexeme = "+";
+                              cout << lexeme << endl;
                 tok = new Token(PLUS, UNDEF, lexeme);
                 return tok;
             case '-':
                 pos++;
                 lexeme = "-";
+                              cout << lexeme << endl;
                 tok = new Token(MINUS, UNDEF, lexeme);
                 return tok;
             case '*':
                 pos++;
                 lexeme = "*";
+                              cout << lexeme << endl;
                 tok = new Token(MULT, UNDEF, lexeme);
                 return tok;
             case '/':
                 pos++;
                 lexeme = "/";
+                              cout << lexeme << endl;
                 tok = new Token(DIV, UNDEF, lexeme);
                 return tok;
             case '=':
@@ -190,10 +242,12 @@ Token* Scanner::nextToken() {
                 if (pos < input.length() && input[pos] == '=') {
                     pos++;
                     lexeme = "==";
+                                  cout << lexeme << endl;
                     tok = new Token(EQ, UNDEF, lexeme);
                     return tok;
                 }else{
                 lexeme = "=";
+                              cout << lexeme << endl;
                 tok = new Token(ASSIGN, UNDEF, lexeme);
                 return tok;
                 }
@@ -203,10 +257,12 @@ Token* Scanner::nextToken() {
                 if (pos < input.length() && input[pos] == '=') {
                     pos++;
                     lexeme = "!=";
+                                  cout << lexeme << endl;
                     tok = new Token(NE, UNDEF, lexeme);
                     return tok;
                 }
                 lexeme = "!";
+                              cout << lexeme << endl;
                 tok = new Token(NOT, UNDEF, lexeme);
                 return tok;
             case '<':
@@ -214,10 +270,12 @@ Token* Scanner::nextToken() {
                 if (pos < input.length() && input[pos] == '=') {
                     pos++;
                     lexeme = "<=";
+                                  cout << lexeme << endl;
                     tok = new Token(LE, UNDEF, lexeme);
                     return tok;
                 }
                 lexeme = "<";
+                              cout << lexeme << endl;
                 tok = new Token(LESS, UNDEF, lexeme);
                 return tok;
             case '>':
@@ -225,10 +283,12 @@ Token* Scanner::nextToken() {
                 if (pos < input.length() && input[pos] == '=') {
                     pos++;
                     lexeme = ">=";
+                                  cout << lexeme << endl;
                     tok = new Token(GE, UNDEF, lexeme);
                     return tok;
                 }
                 lexeme = ">";
+                              cout << lexeme << endl;
                 tok = new Token(GT, UNDEF, lexeme);
                 return tok;
             case '&':
@@ -236,6 +296,7 @@ Token* Scanner::nextToken() {
                 if (pos < input.length() && input[pos] == '&') {
                     pos++;
                     lexeme = "&&";
+                                  cout << lexeme << endl;
                     tok = new Token(AND, UNDEF, lexeme);
                     return tok;
                 }

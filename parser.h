@@ -4,7 +4,7 @@ class Parser
 {
     private:
         Scanner* scanner;
-        Token* ltoken;
+        Token* currentToken;
 
         void advance();
         void match(int);
@@ -25,7 +25,7 @@ class Parser
         void PrimExpression();
         void ExpressionsList();
 
-        void error(string);
+       void syntaxError(std::string); // Declaração da função error g++
 
     public:
         Parser(string);
