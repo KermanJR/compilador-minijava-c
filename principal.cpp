@@ -1,42 +1,38 @@
-#include "parser.h"
-#include <iostream>
+#include "scanner.h"
 
 string* vet;
-
 void print(Token*);
 void allocVetor();
 void freeVetor();
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[])
+{
+    //Verifica se foi executado corretamente
+    //Essa main espera receber o nome do arquivo a ser
+    //executado na linha de comando.
+    if (argc != 2)
+    {
+        cout << "Uso: ./compiler nome_arquivo.mj\n";
+        return 1;
+    }
+
     string input;
 
-
-    // Lê uma linha de entrada
     getline(cin, input);
 
-    // Cria um objeto Scanner com a entrada fornecida
     Scanner* scanner = new Scanner(input);
-
-    // Aloca o vetor de strings para mapear os tokens
     allocVetor();
 
-    //Parser* parser = new Parser(input);
-    //parser->run();
     Token* t;
 
-    do {
-        // Obtém o próximo token do scanner
+    do
+    {
         t = scanner->nextToken();
 
-        // Imprime o token
         print(t);
-    } while (t->name != END_OF_FILE);
+    }while (t->name != END_OF_FILE);
 
-    // Libera a memória alocada para o scanner
     delete scanner;
-    //delete parser;
-    // Libera a memória alocada para o vetor de strings
-    freeVetor();
 
     return 0;
 }
@@ -47,7 +43,7 @@ void allocVetor() {
 
     vet[UNDEF] = "UNDEF";
     vet[ID] = "ID";
-    vet[NUMBER] = "NUMBER";
+    vet[INTEGER_LITERAL] = "INTEGER_LITERAL";
     vet[PLUS] = "PLUS";
     vet[MINUS] = "MINUS";
     vet[MULT] = "MULT";
@@ -71,29 +67,32 @@ void allocVetor() {
     vet[QUOTE] = "QUOTE";
     vet[DOT] = "DOT";
     vet[COMMA] = "COMMA";
-    vet[BOOLEAN] = "BOOLEAN"; // PR
-    vet[CLASS] = "CLASS"; // PR
-    vet[ELSE] = "ELSE"; // PR
-    vet[EXTENDS] = "EXTENDS"; // PR
-    vet[FALSE] = "FALSE"; // PR
-    vet[IF] = "IF"; // PR
-    vet[INT] = "INT"; // PR
-    vet[LENGTH] = "LENGTH"; // PR
-    vet[MAIN] = "MAIN"; // PR
-    vet[NEW] = "NEW"; // PR
-    vet[PUBLIC] = "PUBLIC"; // PR
-    vet[RETURN] = "RETURN"; // PR
-    vet[STATIC] = "STATIC"; // PR
-    vet[STRING] = "STRING"; // PR
-    vet[SYSTEM_OUT_PRINTLN] = "SYSTEM_OUT_PRINTLN"; // PR
-    vet[THIS] = "THIS"; // PR
-    vet[TRUE] = "TRUE"; // PR
-    vet[VOID] = "VOID"; // PR
-    vet[WHILE] = "WHILE"; // PR
-    vet[END_OF_FILE] = "END_OF_FILE";
+    vet[IF] = "IF";
+    vet[ELSE] = "ELSE";
+     vet[WHILE] = "WHILE";
+      vet[CLASS] = "CLASS";
+       vet[MAIN] = "MAIN";
+        vet[VOID] = "VOID";
+         vet[STATIC] = "STATIC";
+          vet[EXTENDS] = "EXTENDS";
+           vet[FALSE] = "FALSE";
+            vet[TRUE] = "TRUE";
+             vet[INT] = "INT";
+              vet[RETURN] = "RETURN";
+              vet[NEW] = "NEW";
+              vet[STRING] = "STRING";
+              vet[THIS] = "THIS";
+               vet[PUBLIC] = "PUBLIC";
+               vet[LENGTH] = "LENGTH";
+                vet[THIS] = "THIS";
+                vet[SYSTEM_OUT_PRINT_LN] = "SYSTEM_OUT_PRINT_LN";
+              vet[END_OF_FILE] = "END_OF_FILE";
+
 }
 
-// Libera a memória alocada para o vetor de strings
+// Libera a memÃ³ria
+
+// Libera a memÃ³ria alocada para o vetor de strings
 void freeVetor() {
     delete[] vet;
 }
@@ -102,10 +101,12 @@ void freeVetor() {
 void print(Token* t) {
     std::cout << vet[t->name];
 
-    // Se o atributo do token não for UNDEF, imprime o atributo
+    // Se o atributo do token nÃ£o for UNDEF, imprime o atributo
     if (t->attribute != UNDEF)
         std::cout << "(" << vet[t->attribute] << ")";
 
     std::cout << " ";
 }
+
+
 

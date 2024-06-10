@@ -1,4 +1,6 @@
 #include "scanner.h"
+#include <string.h>
+
 
 class Parser
 {
@@ -24,11 +26,13 @@ class Parser
         void UnExpression();
         void PrimExpression();
         void ExpressionsList();
+		
 
-       void syntaxError(std::string); // Declaração da função error g++
+       void syntaxError(std::string); 
 
     public:
+	
+		std::string getTokenName(int tokenId);
         Parser(string);
-
         void run();
 };

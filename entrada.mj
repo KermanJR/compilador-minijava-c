@@ -1,14 +1,30 @@
-class Main {
+class ComplexClass {
     public static void main(String[] args) {
-        int a;
+        int x = 0;
+        boolean flag = true;
+        x = x + 1;
+        if (x < 10) {
+            System.out.println(x);
+        } else {
+            System.out.println(-1);
+        }
+        System.out.println(x);
+    }
+    
+    public int Teste(int x, int y){
+        int a[] = new int[10];
         int b;
-        int temp;
-        a = 5;
-        b = 10;
-        temp = a;
-        a = b;
-        b = temp;
-        System.out.println(a); // Saída: a: 10
-        System.out.println(b); // Saída: b: 5
+        b = x + y;
+        a[0] = b;
+        return a[0];
     }
 }
+
+class AnotherComplexClass extends ComplexClass {
+    public int Teste() {
+        int a = 5;
+        int b = 10;
+        return a * b;
+    }
+}
+

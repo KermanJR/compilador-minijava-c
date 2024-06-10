@@ -25,7 +25,7 @@ int main(int argc, char* argv[]) {
     stringstream buffer;
     buffer << file.rdbuf();
     content = buffer.str();
-    cout << content;
+    //cout << content;
 
     // Cria um objeto Parser com o conteúdo do arquivo
     Parser* parser = new Parser(content);

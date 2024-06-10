@@ -1,7 +1,7 @@
 #include "scanner.h"
 #include <set>
 
-// Palavras reservadas
+
 set<string> reservedWords = {
     "if",
     "else",
@@ -28,6 +28,7 @@ set<string> reservedWords = {
 // Construtor
 Scanner::Scanner(string input) {
     this->input = input;
+	this->lineNumber = 1;
     pos = 0;
 }
 
@@ -41,6 +42,10 @@ Token* Scanner::nextToken() {
         // Caracter atual a ser lido
         char currentChar = input[pos];
 
+		if(currentChar == '\n'){
+			lineNumber++;
+		}
+		
         // Verifica se é um espaço em branco e avança para o próximo caractere
         if (isspace(currentChar)) {
             pos++;
