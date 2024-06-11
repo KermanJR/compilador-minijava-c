@@ -6,6 +6,7 @@ Parser::Parser(string input) {
 }
 
 void Parser::advance() {
+    int prevTokenName = currentToken ? currentToken->name : -1;
     currentToken = scanner->nextToken();
 }
 
@@ -13,15 +14,14 @@ void Parser::match(int expected) {
     if (currentToken->name == expected) {
         advance();
     } else {
-        syntaxError("expected " + std::to_string(expected) + " but found " + currentToken->lexeme);
+        syntaxError("expected " + getTokenName(expected) + " but found " + currentToken->lexeme);
     }
 }
 
 void Parser::syntaxError(std::string message) {
-    std::cerr << "Syntax error: " << message << std::endl;
+    std::cerr << "Syntax error on line " << scanner->getLineNumber() << ": " << message << std::endl;
     exit(EXIT_FAILURE);
 }
-
 
 void Parser::run() {
     Program();
@@ -55,6 +55,12 @@ void Parser::MainClass() {
         Statement();
     }
     match(R_BRACE);
+
+    // Adicionado para permitir métodos dentro da classe principal
+    while (currentToken->name == PUBLIC || currentToken->name == STATIC) {
+        MethodDeclaration();
+    }
+
     match(R_BRACE);
 }
 
@@ -66,9 +72,6 @@ void Parser::ClassDeclaration() {
         match(ID);
     }
     match(L_BRACE);
-    while (currentToken->name == INT || currentToken->name == BOOLEAN || currentToken->name == ID) {
-        VarDeclaration();
-    }
     while (currentToken->name == PUBLIC) {
         MethodDeclaration();
     }
@@ -78,6 +81,20 @@ void Parser::ClassDeclaration() {
 void Parser::VarDeclaration() {
     Type();
     match(ID);
+    if (currentToken->name == L_BRACKET) {
+        match(L_BRACKET);
+		if(currentToken->name == INTEGER_LITERAL){
+			match(INTEGER_LITERAL);
+		}else{
+			match(R_BRACKET);
+		}
+        
+        
+    }
+    if (currentToken->name == ASSIGN) {
+        match(ASSIGN);
+        Expression();
+    }
     match(SEMICOLON);
 }
 
@@ -93,44 +110,62 @@ void Parser::Type() {
     } else if (currentToken->name == ID) {
         match(ID);
     } else {
-        std::cerr << "Syntax error: expected type but found " << currentToken->name << std::endl;
-        exit(EXIT_FAILURE);
+        syntaxError("expected type but found " + getTokenName(currentToken->name));
     }
 }
 
 
+
 void Parser::MethodDeclaration() {
-    match(PUBLIC);
-    Type();
-    match(ID);
-    match(L_PAREN);
+    match(PUBLIC); 
+    Type(); 
+    match(ID); 
+    match(L_PAREN); 
+
+    
     if (currentToken->name == INT || currentToken->name == BOOLEAN || currentToken->name == ID) {
         Params();
     }
-    match(R_PAREN);
-    match(L_BRACE);
+
+    match(R_PAREN); 
+    match(L_BRACE); 
+
+    
     while (currentToken->name == INT || currentToken->name == BOOLEAN || currentToken->name == ID) {
         VarDeclaration();
-    }
+	
     while (currentToken->name == L_BRACE || currentToken->name == IF || currentToken->name == WHILE || currentToken->name == SYSTEM_OUT_PRINT_LN || currentToken->name == ID) {
         Statement();
     }
-    match(RETURN);
-    Expression();
-    match(SEMICOLON);
+    }
+
+    
+
+    
+    match(RETURN); 
+    Expression(); 
+    match(SEMICOLON); 
+
     match(R_BRACE);
 }
 
 void Parser::Params() {
     Type();
+    if (currentToken->name == L_BRACKET) {
+        match(L_BRACKET);
+        match(R_BRACKET);
+    }
     match(ID);
     while (currentToken->name == COMMA) {
         match(COMMA);
         Type();
+        if (currentToken->name == L_BRACKET) {
+            match(L_BRACKET);
+            match(R_BRACKET);
+        }
         match(ID);
     }
 }
-
 
 void Parser::Statement() {
     if (currentToken->name == L_BRACE) {
@@ -156,10 +191,10 @@ void Parser::Statement() {
     } else if (currentToken->name == SYSTEM_OUT_PRINT_LN) {
         match(SYSTEM_OUT_PRINT_LN);
         match(L_PAREN);
-		Expression();
+        Expression();
         match(R_PAREN);
         match(SEMICOLON);
-    }else if (currentToken->name == ID) {
+    } else if (currentToken->name == ID) {
         string idName = currentToken->lexeme;
         match(ID);
         if (currentToken->name == ASSIGN) {
@@ -174,16 +209,12 @@ void Parser::Statement() {
             Expression();
             match(SEMICOLON);
         } else {
-            std::cerr << "Syntax error: expected '=' or '[' but found " << currentToken->name << std::endl;
-            exit(EXIT_FAILURE);
+            syntaxError("expected '=' or '[' but found " + getTokenName(currentToken->name));
         }
     } else if (currentToken->name == INT || currentToken->name == BOOLEAN) {
-        Type();
-        match(ID);
-        match(SEMICOLON);
+        VarDeclaration();
     } else {
-        std::cerr << "Syntax error: expected statement but found " << currentToken->name << std::endl;
-        exit(EXIT_FAILURE);
+        syntaxError("expected statement but found " + getTokenName(currentToken->name));
     }
 }
 
@@ -245,8 +276,7 @@ void Parser::UnExpression() {
     } else if (currentToken->name == INTEGER_LITERAL || currentToken->name == TRUE || currentToken->name == FALSE || currentToken->name == NEW || currentToken->name == ID || currentToken->name == THIS || currentToken->name == L_PAREN) {
         PrimExpression();
     } else {
-        std::cerr << "Syntax error: expected unary expression but found " << currentToken->name << std::endl;
-        exit(EXIT_FAILURE);
+        syntaxError("expected unary expression but found " + getTokenName(currentToken->name));
     }
 }
 
@@ -286,18 +316,16 @@ void Parser::PrimExpression() {
             match(L_PAREN);
             match(R_PAREN);
         } else {
-            std::cerr << "Syntax error: expected type after 'new' but found " << currentToken->name << std::endl;
-            exit(EXIT_FAILURE);
+            syntaxError("expected type after 'new' but found " + getTokenName(currentToken->name));
         }
     } else if (currentToken->name == INTEGER_LITERAL || currentToken->name == TRUE || currentToken->name == FALSE) {
         match(currentToken->name);
     } else if (currentToken->name == L_PAREN) {
         match(L_PAREN);
         Expression();
-        match(R_PAREN);
+        match(R_PAREN); 
     } else {
-        std::cerr << "Syntax error: expected primary expression but found " << currentToken->name << std::endl;
-        exit(EXIT_FAILURE);
+        syntaxError("expected primary expression but found " + getTokenName(currentToken->name));
     }
 }
 
@@ -306,5 +334,51 @@ void Parser::ExpressionsList() {
     while (currentToken->name == COMMA) {
         match(COMMA);
         Expression();
+    }
+}
+
+string Parser::getTokenName(int tokenId) {
+    switch (tokenId) {
+        case IF: return "if";
+        case ELSE: return "else";
+        case WHILE: return "while";
+        case CLASS: return "class";
+        case MAIN: return "main";
+        case VOID: return "void";
+        case STATIC: return "static";
+        case EXTENDS: return "extends";
+        case FALSE: return "false";
+        case TRUE: return "true";
+        case INT: return "int";
+        case BOOLEAN: return "boolean";
+        case RETURN: return "return";
+        case NEW: return "new";
+        case STRING: return "String";
+        case PUBLIC: return "public";
+        case THIS: return "this";
+        case SYSTEM_OUT_PRINT_LN: return "System.out.println";
+        case ID: return "identifier";
+        case INTEGER_LITERAL: return "integer literal";
+        case L_PAREN: return "(";
+        case R_PAREN: return ")";
+        case L_BRACKET: return "[";
+        case R_BRACKET: return "]";
+        case L_BRACE: return "{";
+        case R_BRACE: return "}";
+        case SEMICOLON: return ";";
+        case COMMA: return ",";
+        case DOT: return ".";
+        case ASSIGN: return "=";
+        case PLUS: return "+";
+        case MINUS: return "-";
+        case MULT: return "*";
+        case DIV: return "/";
+        case LESS: return "<";
+        case GT: return ">";
+        case EQ: return "==";
+        case NE: return "!=";
+        case NOT: return "!";
+        case AND: return "&&";
+        default: return "unknown token";
     }
 }
